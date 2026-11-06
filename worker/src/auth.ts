@@ -255,6 +255,17 @@ async function verificationKey(kid: string, config: AuthConfig): Promise<CryptoK
   const now = Date.now();
   let key = cache.keys.get(kid);
   if (key && now < cache.expiresAt) return key;
+  if (typeof config.PLATFORM_JWKS_JSON === "string" && config.PLATFORM_JWKS_JSON.trim().length > 0) {
+    const pinnedKeys = await parseJwksText(config.PLATFORM_JWKS_JSON);
+    const pinnedKey = pinnedKeys.get(kid);
+    if (pinnedKey) {
+      for (const [pinnedKid, cryptoKey] of pinnedKeys) {
+        cache.keys.set(pinnedKid, cryptoKey);
+      }
+      cache.expiresAt = now + JWKS_TTL_MS;
+      return pinnedKey;
+    }
+  }
   if (cache.refreshing) {
     await cache.refreshing;
   } else if (now >= cache.refreshCooldownUntil) {
