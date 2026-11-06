@@ -545,13 +545,21 @@ async function createWish(event?: Event) {
   }
 }
 
+let lastPointerHitAt = 0;
+
 element("fish").addEventListener("pointerdown", (event) => {
   if (!event.isPrimary || event.button !== 0) return;
-  event.preventDefault();
+  lastPointerHitAt = Date.now();
   hit();
 });
+element("fish").addEventListener("pointerup", () => {
+  audio.unlock();
+});
 element("fish").addEventListener("click", (event) => {
-  if (event.detail === 0) hit();
+  audio.unlock();
+  if (event.detail === 0 || Date.now() - lastPointerHitAt > 450) {
+    hit();
+  }
 });
 window.addEventListener("keydown", (event) => {
   if (event.code !== "Space" || event.repeat ||
