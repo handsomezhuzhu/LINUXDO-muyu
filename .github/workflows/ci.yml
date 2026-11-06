@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: muyu-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: Mini app tests and package
+    runs-on: instabox-medium
+    timeout-minutes: 20
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Install Bun 1.4.3
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Restore the official SDK and verify every runtime file
+        shell: bash
+        env:
+          SDK_COMMIT: 401f39b080d94fb7e6aa4f8179df7a51f1c3ad46
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/official-mini-app-sdk.zip"
+          extract="$RUNNER_TEMP/official-mini-app-sdk"
+          mkdir -p "$extract"
+          curl --fail --silent --show-error --location --retry 3 --max-time 90 \
+            "https://codeload.github.com/linux-do/mapp-developer-guide/zip/$SDK_COMMIT" \
+            --output "$archive"
+          unzip -q "$archive" -d "$extract"
+          sdk="$extract/mapp-developer-guide-$SDK_COMMIT/sdk"
+          test -f "$sdk/package.json"
+          while read -r expected file; do
+            [[ -z "${expected:-}" || "$expected" =~ ^# ]] && continue
+            [[ "$expected" =~ ^[0-9a-f]{64}$ ]] || { echo "::error::Invalid SDK fingerprint"; exit 1; }
+            actual="$(sha256sum "$sdk/$file" | cut -d' ' -f1)"
+            if [[ "$actual" != "$expected" ]]; then
+              echo "::error::SDK checksum mismatch for $file"
+              exit 1
+            fi
+          done < .github/sdk-code.sha256
+          cp -R "$sdk" "$GITHUB_WORKSPACE/sdk"
+          rm -f "$archive"
+
+      - name: Install, typecheck and test
+        working-directory: app
+        run: |
+          set -euo pipefail
+          bun install --frozen-lockfile
+          bun run typecheck
+          bun run test
+
+      - name: Build and inspect the Discourse package
+        working-directory: app
+        run: |
+          set -euo pipefail
+          bun run build
+          unzip -l dist/package/app.zip
+          unzip -Z1 dist/package/app.zip | grep -qx 'manifest.json'
+          test -f dist/package/app.zip
+
+  worker:
+    name: Worker tests and dry run
+    runs-on: instabox-medium
+    timeout-minutes: 20
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Install Bun 1.4.3
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+
+      - name: Install, typecheck and test
+        working-directory: worker
+        run: |
+          set -euo pipefail
+          bun install --frozen-lockfile
+          bun run typecheck
+          bun run test
+
+      - name: Build Worker without deploying
+        working-directory: worker
+        run: bunx wrangler deploy --dry-run --config wrangler.example.toml --env production

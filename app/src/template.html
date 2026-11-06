@@ -1,0 +1,139 @@
+<main class="app" id="app" data-mode="dark" data-reduced-motion="false" data-ready="false">
+  <header class="topbar">
+    <div class="brand" aria-label="Muyu">
+      <span class="brand__icon-box">
+        <img class="brand__fish" id="brand-icon" alt="" draggable="false" />
+      </span>
+      <span class="brand__name" data-text="brand">木鱼</span>
+      <span class="brand__sep" aria-hidden="true"></span>
+      <span class="brand__sub" data-text="brandSub">电子木鱼</span>
+    </div>
+    <nav class="actions" aria-label="Controls">
+      <button class="icon-button" id="sound-toggle" type="button" aria-pressed="true" disabled>
+        <svg id="sound-on-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5l4.5 4V5Z"/><path d="M15 9a4 4 0 0 1 0 6M17.8 6.2a8 8 0 0 1 0 11.6"/></svg>
+        <svg id="sound-off-icon" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M11 5 6.5 9H3v6h3.5l4.5 4V5Z"/><path d="m16 9 5 6m0-6-5 6"/></svg>
+        <span class="sr-only" id="sound-label">关闭音效</span>
+      </button>
+      <button class="icon-button" id="fullscreen-toggle" type="button" aria-pressed="false" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M8 21H3v-5m13 5h5v-5"/></svg>
+        <span class="sr-only" id="fullscreen-label">进入全屏</span>
+      </button>
+      <button class="icon-button" id="settings-open" type="button" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.08A1.7 1.7 0 0 0 9 19.37a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.63 15 1.7 1.7 0 0 0 3.08 14H3v-4h.08A1.7 1.7 0 0 0 4.63 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.63 1.7 1.7 0 0 0 10 3.08V3h4v.08A1.7 1.7 0 0 0 15 4.63a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.37 9 1.7 1.7 0 0 0 20.92 10H21v4h-.08A1.7 1.7 0 0 0 19.4 15Z"/></svg>
+        <span class="sr-only" data-text="settings">设置</span>
+      </button>
+    </nav>
+  </header>
+
+  <section class="practice" aria-label="Wooden fish">
+    <div class="merit">
+      <p class="merit__eyebrow" data-text="totalLabel">累计功德</p>
+      <strong class="merit__total" id="total">0</strong>
+      <div class="merit__today">
+        <span data-text="today">今日功德</span>
+        <span class="merit__divider" aria-hidden="true"></span>
+        <strong id="today">0</strong>
+      </div>
+    </div>
+
+    <div class="fish-stage" id="fish-stage">
+      <div class="float-layer" id="float-layer" aria-hidden="true"></div>
+      <button class="fish" id="fish" type="button" disabled>
+        <span class="fish__visual" id="fish-visual">
+          <img class="fish__image" id="fish-image" alt="" draggable="false" />
+          <span class="fish__fallback" id="fish-fallback" data-text="imageFallback" hidden>木鱼</span>
+        </span>
+      </button>
+    </div>
+    <p class="instruction" id="instruction" data-text="loading">正在准备木鱼…</p>
+    <div class="wish-area" id="wish-area" hidden>
+      <button class="wish-new" id="wish-open" type="button"><span aria-hidden="true">＋</span><span data-text="wishCreateOpen">写下祈福</span></button>
+      <button class="wish-current" id="wish-current" type="button" hidden>
+        <span class="wish-current__head">
+          <span class="wish-current__text" id="wish-current-text"></span>
+          <span class="wish-current__count" id="wish-progress-text">0 / 108</span>
+        </span>
+        <progress id="wish-progress" max="108" value="0"></progress>
+      </button>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span class="local-note" id="sync-status" data-status="loading"><span class="local-note__dot" aria-hidden="true"></span><span id="sync-label" data-text="connecting">正在连接账号</span></span>
+    <span class="keyboard-tip"><kbd>Space</kbd><span data-text="keyboardTip">按空格键也可以敲</span></span>
+  </footer>
+  <p class="notice" id="notice" role="status" aria-live="polite"></p>
+
+  <section class="access-gate" id="access-gate" data-status="loading" aria-labelledby="gate-title">
+    <div class="access-gate__card">
+      <div class="access-gate__visual" aria-hidden="true">
+        <span class="access-gate__ring"></span>
+        <span class="access-gate__symbol">○</span>
+      </div>
+      <span class="access-gate__badge" data-text="brandSub">电子木鱼</span>
+      <h1 id="gate-title" data-text="loading">正在准备木鱼…</h1>
+      <p id="gate-message" data-text="connectingHint">正在连接社区账号与云端功德。</p>
+      <div class="access-gate__bar" aria-hidden="true"><span></span></div>
+      <button class="text-button text-button--strong" id="gate-retry" type="button" data-text="retry" hidden>重新连接</button>
+    </div>
+  </section>
+</main>
+
+<dialog class="dialog" id="settings-dialog" aria-labelledby="settings-title">
+  <div class="dialog__header">
+    <div>
+      <h2 id="settings-title" data-text="settings">设置</h2>
+    </div>
+    <button class="icon-button icon-button--ghost" id="settings-close" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg><span class="sr-only" data-text="close">关闭</span></button>
+  </div>
+  <div class="settings-row">
+    <div class="settings-row__text">
+      <h3 data-text="soundSetting">木鱼音效</h3>
+      <p data-text="soundHint">每次轻敲，都有回应</p>
+    </div>
+    <input class="switch" id="sound-checkbox" type="checkbox" role="switch" checked disabled />
+  </div>
+  <div class="about-local">
+    <h3 data-text="storageTitle">账号功德</h3>
+    <p data-text="storageHint">功德与祈福跟随社区账号保存在云端。换设备登录同一账号即可继续使用。</p>
+  </div>
+</dialog>
+
+<dialog class="dialog" id="wish-dialog" aria-labelledby="wish-title">
+  <div class="dialog__header">
+    <h2 id="wish-title" data-text="wishTitle">写下祈福</h2>
+    <button class="icon-button icon-button--ghost" id="wish-close" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg><span class="sr-only" data-text="close">关闭</span></button>
+  </div>
+  <section class="wish-detail-card" id="wish-active-detail" hidden>
+    <span class="badge" data-text="wishInProgress">正在祈福</span>
+    <h3 id="wish-detail-content"></h3>
+    <div class="wish-detail__numbers"><strong id="wish-detail-progress"></strong><span data-text="wishProgress">已敲击</span></div>
+    <p class="wish-detail__hint" data-text="wishActiveHint">完成这一愿后，就可以开始新的祈福。</p>
+  </section>
+  <form id="wish-form">
+    <label class="form-label" for="wish-input" data-text="wishContentLabel">心愿</label>
+    <textarea id="wish-input" rows="3" maxlength="80" data-placeholder="wishPlaceholder" placeholder="愿平安顺遂，所求皆如愿"></textarea>
+    <div class="form-meta"><span data-text="wishPrivacy">仅自己可见，不会发表到社区</span><span id="wish-count">0 / 80</span></div>
+    <label class="form-label" for="wish-target" data-text="wishTargetLabel">圆满目标</label>
+    <select id="wish-target">
+      <option value="108">108</option>
+      <option value="1008">1008</option>
+      <option value="10080">10080</option>
+    </select>
+    <p class="form-hint" data-text="wishStartHint">从祈福开始后，每敲一下，进度加一。</p>
+    <p class="form-error" id="wish-error" role="alert"></p>
+    <button class="text-button text-button--strong wish-submit" id="wish-create" type="submit" data-text="wishStart" disabled>开始祈福</button>
+  </form>
+  <details class="wish-history" id="wish-history-details" hidden>
+    <summary data-text="wishHistory">最近圆满</summary>
+    <ul id="wish-history"></ul>
+  </details>
+</dialog>
+
+<dialog class="dialog dialog--confirm" id="wish-complete-dialog" aria-labelledby="wish-complete-title">
+  <span class="confirm-mark" aria-hidden="true">○</span>
+  <h2 id="wish-complete-title" data-text="wishComplete">祈福圆满</h2>
+  <p class="complete-wish-text" id="complete-wish-text"></p>
+  <p data-text="wishCompleteHint">这一份心愿已经完成，愿所求皆如愿。</p>
+  <button class="text-button text-button--strong" id="wish-complete-close" type="button" data-text="wishContinue">继续</button>
+</dialog>

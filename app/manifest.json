@@ -1,0 +1,45 @@
+{
+  "format": 1,
+  "id": "019a2a58-0000-7000-8000-000000000001",
+  "name": "木鱼",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "script": "app.js",
+  "style": "app.css",
+  "permissions": [
+    "user.read",
+    "theme.read",
+    "storage.read",
+    "storage.write",
+    "audio.play",
+    "fullscreen",
+    "network.request"
+  ],
+  "assets": ["images/muyu.webp", "media/NOTICE.txt"],
+  "media": {
+    "knock": {
+      "path": "media/knock.wav",
+      "kind": "audio",
+      "mime": "audio/wav"
+    }
+  },
+  "endpoints": {
+    "getState": {
+      "url": "https://muyu-api.example.com/v1/state",
+      "method": "GET",
+      "query": ["day"],
+      "auth": "platform"
+    },
+    "syncMerit": {
+      "url": "https://muyu-api.example.com/v1/merit/sync",
+      "method": "POST",
+      "auth": "platform"
+    },
+    "createWish": {
+      "url": "https://muyu-api.example.com/v1/wishes",
+      "method": "POST",
+      "query": ["day"],
+      "auth": "platform"
+    }
+  }
+}

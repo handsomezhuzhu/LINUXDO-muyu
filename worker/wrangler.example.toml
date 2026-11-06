@@ -1,0 +1,40 @@
+# Copy to wrangler.local.toml and replace the example IDs, origins and application ID.
+name = "muyu-worker"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+[env.production]
+name = "muyu-production"
+
+[env.production.vars]
+CHANNEL = "production"
+PLATFORM_ISSUER = "https://community.example.com"
+PLATFORM_JWKS_URL = "https://community.example.com/mini-app-api/jwks"
+PLATFORM_AUDIENCE = "https://muyu-api.example.com"
+PLATFORM_APP_ID = "replace-with-production-app-id"
+APP_VERSION = "1.0.0"
+CORS_ORIGIN = "https://community.example.com"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "muyu-production"
+database_id = "00000000-0000-0000-0000-000000000001"
+migrations_dir = "migrations"
+
+[env.sandbox]
+name = "muyu-sandbox"
+
+[env.sandbox.vars]
+CHANNEL = "sandbox"
+PLATFORM_ISSUER = "https://community.example.com"
+PLATFORM_JWKS_URL = "https://community.example.com/mini-app-api/jwks"
+PLATFORM_AUDIENCE = "https://muyu-sandbox-api.example.com"
+PLATFORM_APP_ID = "replace-with-sandbox-app-id"
+APP_VERSION = "1.0.0"
+CORS_ORIGIN = "https://community.example.com"
+
+[[env.sandbox.d1_databases]]
+binding = "DB"
+database_name = "muyu-sandbox"
+database_id = "00000000-0000-0000-0000-000000000002"
+migrations_dir = "migrations"

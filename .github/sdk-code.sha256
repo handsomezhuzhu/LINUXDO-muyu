@@ -1,0 +1,9 @@
+# Official SDK runtime files, commit 401f39b080d94fb7e6aa4f8179df7a51f1c3ad46
+# README is documentation (terminology differs in the original instruction ZIP).
+9573ae17c68217773682d9bcbbb8cb25eab40d52750b9bf89259f44094bf6dca  index.d.ts
+8d8ecaa0b85e67c0b41ea4f48bbaf1958de39486cb715d21d08ca377eee36091  index.mjs
+749094131a05968fc95262522c9753687d6736c9e046d5d1f8c8e9363d6962d9  pack.d.ts
+723f3f052956f00f1322bcd793df00734d373d0a9aaa3e7e35f5ef4c5ede00b1  pack.mjs
+d72dcce6db1c46a073e675b14e9803b8d661d206cf7d6b846a33334aff1622c6  package.json
+afe1aebf45b18bc55d78b04bfbaa895b57ca08fba25b3435608505f2ce664a83  server.d.ts
+725ff7b3a15e53ea4d896c049b0c35c24f927a937ea767a22ea47a564c94e9fd  server.mjs
