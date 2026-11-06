@@ -231,6 +231,7 @@ function renderGate() {
     "login-required": [t("loginRequiredTitle"), t("loginRequiredMessage")],
     "permission-required": [t("permissionTitle"), t("permissionMessage")],
     offline: [t("offlineTitle"), t("offlineMessage")],
+    "service-unavailable": [t("serviceTitle"), t("serviceMessage")],
     "cache-error": [t("cacheErrorTitle"), t("cacheErrorMessage")],
   };
   const [title, message] = content[gateStatus];

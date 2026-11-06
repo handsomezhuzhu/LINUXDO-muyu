@@ -11,18 +11,11 @@
     "theme.read",
     "storage.read",
     "storage.write",
-    "audio.play",
+    "audio.webAudio",
     "fullscreen",
     "network.request"
   ],
   "assets": ["images/muyu.webp", "media/NOTICE.txt"],
-  "media": {
-    "knock": {
-      "path": "media/knock.wav",
-      "kind": "audio",
-      "mime": "audio/wav"
-    }
-  },
   "endpoints": {
     "getState": {
       "url": "https://muyu-api.example.com/v1/state",

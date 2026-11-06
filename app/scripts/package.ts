@@ -7,6 +7,16 @@ const manifest = JSON.parse(
 ) as MiniAppManifest;
 manifest.id = process.env.MINI_APP_ID || manifest.id;
 manifest.version = process.env.MINI_APP_VERSION || manifest.version;
+if (
+  manifest.id === "019a2a58-0000-7000-8000-000000000001" &&
+  process.env.MINI_APP_ALLOW_EXAMPLE_ID !== "1"
+) {
+  throw new Error(
+    "Refusing to package with the documentation example app ID. " +
+    "Set MINI_APP_ID to the platform-assigned application ID, " +
+    "or explicitly set MINI_APP_ALLOW_EXAMPLE_ID=1 for CI-only builds."
+  );
+}
 const apiOrigin = process.env.MINI_APP_API_ORIGIN?.replace(/\/+$/, "");
 if (apiOrigin) {
   const paths = {

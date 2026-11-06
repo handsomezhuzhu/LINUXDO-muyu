@@ -132,7 +132,8 @@ export function createAudio(
       source.connect(gainNode);
       source.start(0);
       return true;
-    } catch {
+    } catch (error) {
+      unavailable(error);
       return false;
     }
   }
@@ -145,7 +146,7 @@ export function createAudio(
 
   function unlock() {
     if (disposed || !callbacks.enabled()) return;
-    if (sdk && !sdk.permissions.has("audio.play")) return;
+    if (sdk && !sdk.permissions.has("audio.webAudio")) return;
     const ctx = ensureContext();
     if (!ctx) return;
     if (ctx.state === "suspended") {
@@ -154,10 +155,17 @@ export function createAudio(
         .then(() => {
           if (queuedPlay && !disposed && callbacks.enabled()) {
             queuedPlay = false;
-            triggerSource(ctx);
+            if (ctx.state === "running") {
+              triggerSource(ctx);
+            } else {
+              unavailable(new Error("AudioContext did not resume"));
+            }
           }
         })
-        .catch(() => undefined);
+        .catch((error) => {
+          queuedPlay = false;
+          unavailable(error);
+        });
     } else if (queuedPlay) {
       queuedPlay = false;
       triggerSource(ctx);
@@ -170,7 +178,7 @@ export function createAudio(
     if (now - lastPlay < 35) return;
     lastPlay = now;
 
-    if (sdk && !sdk.permissions.has("audio.play")) {
+    if (sdk && !sdk.permissions.has("audio.webAudio")) {
       unavailable();
       return;
     }
@@ -185,10 +193,16 @@ export function createAudio(
       queuedPlay = true;
       try {
         await ctx.resume();
-      } catch {
+      } catch (error) {
+        queuedPlay = false;
+        unavailable(error);
         return;
       }
-      if ((ctx.state as AudioContextState) !== "running") return;
+      if ((ctx.state as AudioContextState) !== "running") {
+        queuedPlay = false;
+        unavailable(new Error("AudioContext did not resume"));
+        return;
+      }
       queuedPlay = false;
     }
 

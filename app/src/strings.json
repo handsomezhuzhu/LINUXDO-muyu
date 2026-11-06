@@ -65,6 +65,8 @@
     "offlineMessage": "尚未同步的功德已安全保留。恢复网络后点击重新连接，不会重复累计。",
     "cacheErrorTitle": "同步缓存需要恢复",
     "cacheErrorMessage": "为避免覆盖尚未同步的功德，本次没有开放敲击。请刷新或稍后重试。",
+    "serviceTitle": "木鱼服务暂未接受请求",
+    "serviceMessage": "服务端暂时拒绝了本次请求，功德未改动。请稍后重试；若刚更新应用，请检查 Worker 环境与应用版本是否一致，无需重新授权账号权限。",
     "retry": "重新连接"
   },
   "en": {
@@ -133,6 +135,8 @@
     "offlineMessage": "Unsynced merit is preserved. Reconnect when your network is available; retries are never counted twice.",
     "cacheErrorTitle": "Your sync cache needs attention",
     "cacheErrorMessage": "Counting is paused to protect unsynced merit. Refresh or try again later.",
+    "serviceTitle": "The service did not accept this request",
+    "serviceMessage": "Your merit is unchanged. If you just updated the app, make sure the Worker environment and app version match before retrying. No additional account authorization is needed.",
     "retry": "Reconnect"
   }
 }

@@ -62,7 +62,7 @@ export function createDiscourseCloudAdapter(sdk: MiniAppSDK): CloudAdapter {
       }
       const response = await sdk.http.request(endpoint, options);
       if (response.status === 401 || response.status === 403) {
-        throw permissionError();
+        throw new CloudError("service", `Service rejected the request (${response.status})`);
       }
       if (response.status === 409) {
         throw new CloudError("active-wish-exists", "An active wish exists");

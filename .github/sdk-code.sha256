@@ -1,9 +1,10 @@
-# Official SDK runtime files, commit 401f39b080d94fb7e6aa4f8179df7a51f1c3ad46
-# README is documentation (terminology differs in the original instruction ZIP).
-9573ae17c68217773682d9bcbbb8cb25eab40d52750b9bf89259f44094bf6dca  index.d.ts
+# SDK 0.2.0 runtime files, commit 828a1150f745b6b30abc7f8a3dd9dc1703c73136
+# Includes types.d.ts with the audio.webAudio permission declaration.
+7a1ace77ec6a3f33d2e5e094682afa689ece0a8741f5c8cd0143ad405f29c3e5  index.d.ts
 8d8ecaa0b85e67c0b41ea4f48bbaf1958de39486cb715d21d08ca377eee36091  index.mjs
-749094131a05968fc95262522c9753687d6736c9e046d5d1f8c8e9363d6962d9  pack.d.ts
-723f3f052956f00f1322bcd793df00734d373d0a9aaa3e7e35f5ef4c5ede00b1  pack.mjs
-d72dcce6db1c46a073e675b14e9803b8d661d206cf7d6b846a33334aff1622c6  package.json
+d00219ef526189e6dfbb691b5241b45ddf2c3bac6472b9c7fa272400b3b0016d  pack.d.ts
+2ff86774365a524bd6285e41552fc56259ade179bad9e8b7a7f210f64c1e29e0  pack.mjs
+4c7bd776ff4ed83c2fc2cef26433691da8c79dba75379d34c2185406ac4dcb31  package.json
 afe1aebf45b18bc55d78b04bfbaa895b57ca08fba25b3435608505f2ce664a83  server.d.ts
 725ff7b3a15e53ea4d896c049b0c35c24f927a937ea767a22ea47a564c94e9fd  server.mjs
+4a25bd78be433f376e788626d15fdec99d74ceba2e5e050460d1974973295fa8  types.d.ts

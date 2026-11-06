@@ -50,6 +50,7 @@ export interface PendingPayload {
 export type CloudErrorKind =
   | "offline"
   | "permission"
+  | "service"
   | "cache"
   | "invalid-response"
   | "active-wish-exists";
@@ -81,6 +82,7 @@ export type InitializeStatus =
   | "ready"
   | "login-required"
   | "permission-required"
+  | "service-unavailable"
   | "offline"
   | "cache-error";
 
@@ -326,6 +328,16 @@ export function parsePendingPayload(serialized: string | null): PendingPayload {
   }
 }
 
+function initializationError(error: unknown): { status: InitializeStatus } {
+  if (error instanceof CloudError) {
+    if (error.kind === "permission") return { status: "permission-required" };
+    if (error.kind === "service" || error.kind === "invalid-response") {
+      return { status: "service-unavailable" };
+    }
+  }
+  return { status: "offline" };
+}
+
 function emptyServerState(): ServerState {
   return {
     revision: 0,
@@ -377,7 +389,7 @@ export function createCloudController(
   let timer: ReturnType<typeof setTimeout> | null = null;
   let initialization: Promise<{ status: InitializeStatus }> | null = null;
   let tail: Promise<void> = Promise.resolve();
-  let lastFlushError: "cache" | "offline" | "permission" = "offline";
+  let lastFlushError: "cache" | "offline" | "permission" | "service" = "offline";
 
   function recompute(): void {
     const batches = current === null ? pending : [...pending, current];
@@ -568,8 +580,8 @@ export function createCloudController(
         applyResponse(response, responseDay, batch.batchId);
       } catch (error) {
         lastFlushError = error instanceof CloudError &&
-            error.kind === "permission"
-          ? "permission"
+            (error.kind === "permission" || error.kind === "service")
+          ? error.kind
           : "offline";
         accepting = false;
         recompute();
@@ -601,11 +613,7 @@ export function createCloudController(
     try {
       login = await adapter.getLoginUser();
     } catch (error) {
-      return {
-        status: error instanceof CloudError && error.kind === "permission"
-          ? "permission-required"
-          : "offline",
-      };
+      return initializationError(error);
     }
     if (
       login === null ||
@@ -639,11 +647,7 @@ export function createCloudController(
       applyResponse(await adapter.getState(day), day);
     } catch (error) {
       recompute();
-      return {
-        status: error instanceof CloudError && error.kind === "permission"
-          ? "permission-required"
-          : "offline",
-      };
+      return initializationError(error);
     }
 
     if (!(await flushInternal())) {
@@ -653,7 +657,9 @@ export function createCloudController(
           ? "cache-error"
           : lastFlushError === "permission"
             ? "permission-required"
-            : "offline",
+            : lastFlushError === "service"
+              ? "service-unavailable"
+              : "offline",
       };
     }
     ready = true;

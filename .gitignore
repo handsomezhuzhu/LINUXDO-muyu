@@ -25,6 +25,7 @@
 **/artifacts/
 **/*.tsbuildinfo
 **/*.local
+**/*.local.md
 /grok-image-*.jpg
 
 # OS / editors

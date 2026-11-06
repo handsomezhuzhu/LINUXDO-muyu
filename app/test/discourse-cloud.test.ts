@@ -63,9 +63,17 @@ describe("Discourse cloud adapter wire format", () => {
     expect(calls).toEqual([{ endpoint: "createWish", options: { method: "POST", query: { day: "2026-11-06" }, json: { content: "平安", target: 108 } } }]);
   });
 
-  it("maps HTTP authorization failures to a permission error", async () => {
+  it("maps HTTP authorization failures to a service error", async () => {
     const { sdk } = mockSdk({ status: 401 });
-    expect(createDiscourseCloudAdapter(sdk).getState("2026-11-06")).rejects.toMatchObject({ kind: "permission" });
+    expect(createDiscourseCloudAdapter(sdk).getState("2026-11-06")).rejects.toMatchObject({ kind: "service" });
+  });
+
+  it("keeps missing SDK permissions separate from service rejections", async () => {
+    const sdk = {
+      ready: Promise.resolve(),
+      permissions: { has: () => false },
+    } as unknown as MiniAppSDK;
+    expect(createDiscourseCloudAdapter(sdk).getLoginUser()).rejects.toMatchObject({ kind: "permission" });
   });
 
   it("maps an existing active wish to a conflict", async () => {

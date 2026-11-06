@@ -29,7 +29,7 @@ jobs:
       - name: Restore the official SDK and verify every runtime file
         shell: bash
         env:
-          SDK_COMMIT: 401f39b080d94fb7e6aa4f8179df7a51f1c3ad46
+          SDK_COMMIT: 828a1150f745b6b30abc7f8a3dd9dc1703c73136
         run: |
           set -euo pipefail
           archive="$RUNNER_TEMP/official-mini-app-sdk.zip"
@@ -63,6 +63,8 @@ jobs:
 
       - name: Build and inspect the Discourse package
         working-directory: app
+        env:
+          MINI_APP_ALLOW_EXAMPLE_ID: "1"
         run: |
           set -euo pipefail
           bun run build

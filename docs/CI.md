@@ -26,12 +26,12 @@ https://github.com/linux-do/mapp-developer-guide
 固定提交：
 
 ```text
-401f39b080d94fb7e6aa4f8179df7a51f1c3ad46
+828a1150f745b6b30abc7f8a3dd9dc1703c73136
 ```
 
-这个提交的 SDK 代码、类型和打包器与最初提供的本地 SDK 压缩包一致。官方当前的 `master` 已包含后续音频、WASM 等更新，**不能把当前 master 与旧压缩包的 SHA-256 混用**。
+CI 固定到官方 SDK 0.2.0，兼容应用当前使用的原生 Web Audio 和 `audio.webAudio` 权限。此提交包含 `types.d.ts` 中的 `audio.webAudio`、`types.d.ts` 新权限声明，以及 `pack.mjs` 对同名权限的白名单支持。线上 `master` 若继续演进，构建仍不会在没有复核的情况下自动跟随变化。
 
-CI 从 `.github/sdk-code.sha256` 逐文件验证 7 个 runtime 文件的内容，再提取 `sdk/`。README 仅用于文档说明；原始教学 ZIP 与公开仓库在“微应用/小程序”术语上存在差异，因此不把 README 文本差异误判成代码被篡改。
+CI 从 `.github/sdk-code.sha256` 逐文件验证 8 个 runtime 文件的内容（包含 `types.d.ts`），再提取 `sdk/`。原始教学 ZIP 与公开仓库的 README 仅存在说明文字差异，不把文档命名差异误判成代码被篡改。
 
 所以当前 workflow **不需要任何 SDK Base64 Secret**。此前手工配置的四个 `DISCOURSE_MINI_APP_SDK_ZIP_BASE64_*` Secrets 已不再引用；是否删除可由仓库管理员单独决定，代码不会读取或输出它们。
 
