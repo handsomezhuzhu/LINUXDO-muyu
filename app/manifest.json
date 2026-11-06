@@ -15,7 +15,7 @@
     "fullscreen",
     "network.request"
   ],
-  "assets": ["images/muyu.webp", "data/knock.wav", "media/NOTICE.txt"],
+  "assets": ["images/muyu.webp", "media/NOTICE.txt"],
   "media": {
     "knock": {
       "path": "media/knock.wav",

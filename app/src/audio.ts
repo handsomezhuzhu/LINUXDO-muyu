@@ -4,6 +4,7 @@
  * See THIRD_PARTY_NOTICES.md and the bundled media/NOTICE.txt.
  */
 import type { MiniAppError, MiniAppSDK } from "@discourse-mini-app/sdk";
+import { KNOCK_WAV_BASE64 } from "./knock-wav.ts";
 
 const AudioContextCtor: typeof AudioContext | undefined =
   globalThis.AudioContext ??
@@ -15,58 +16,52 @@ interface PcmData {
   sampleRate: number;
 }
 
-function toUint8Array(input: unknown): Uint8Array | null {
-  if (input instanceof Uint8Array) {
-    return new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
-  }
-  if (input instanceof ArrayBuffer) {
-    return new Uint8Array(input);
-  }
-  if (ArrayBuffer.isView(input)) {
-    return new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
-  }
-  if (Array.isArray(input)) {
-    return Uint8Array.from(input);
-  }
-  return null;
-}
-
 /**
- * Parses 16-bit signed little-endian mono PCM WAV bytes directly into normalized
- * Float32 samples so we never need blob: URLs or async media element decoding.
+ * Decodes the embedded base64 16-bit mono PCM WAV directly inside the iframe's
+ * own V8 realm so we never hit cross-realm ArrayBuffer issues or blob: requests.
  */
-function parseWavPcm16Mono(bytes: Uint8Array): PcmData | null {
-  if (bytes.byteLength < 44) return null;
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  let sampleRate = 44100;
-  let offset = 12;
-  let dataOffset = 44;
-  let dataLength = bytes.byteLength - 44;
-
-  while (offset + 8 <= bytes.byteLength) {
-    const id =
-      String.fromCharCode(bytes[offset]!) +
-      String.fromCharCode(bytes[offset + 1]!) +
-      String.fromCharCode(bytes[offset + 2]!) +
-      String.fromCharCode(bytes[offset + 3]!);
-    const size = view.getUint32(offset + 4, true);
-    if (id === "fmt " && offset + 16 <= bytes.byteLength) {
-      sampleRate = view.getUint32(offset + 12, true) || 44100;
-    } else if (id === "data") {
-      dataOffset = offset + 8;
-      dataLength = Math.min(size, bytes.byteLength - dataOffset);
-      break;
+function decodeEmbeddedWavPcm(): PcmData | null {
+  try {
+    const binary = atob(KNOCK_WAV_BASE64);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
     }
-    offset += 8 + size + (size & 1);
-  }
+    if (bytes.byteLength < 44) return null;
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    let sampleRate = 44100;
+    let offset = 12;
+    let dataOffset = 44;
+    let dataLength = bytes.byteLength - 44;
 
-  const sampleCount = Math.floor(dataLength / 2);
-  if (sampleCount <= 0) return null;
-  const samples = new Float32Array(sampleCount);
-  for (let index = 0; index < sampleCount; index += 1) {
-    samples[index] = view.getInt16(dataOffset + index * 2, true) / 32768;
+    while (offset + 8 <= bytes.byteLength) {
+      const id =
+        String.fromCharCode(bytes[offset]!) +
+        String.fromCharCode(bytes[offset + 1]!) +
+        String.fromCharCode(bytes[offset + 2]!) +
+        String.fromCharCode(bytes[offset + 3]!);
+      const size = view.getUint32(offset + 4, true);
+      if (id === "fmt " && offset + 16 <= bytes.byteLength) {
+        sampleRate = view.getUint32(offset + 12, true) || 44100;
+      } else if (id === "data") {
+        dataOffset = offset + 8;
+        dataLength = Math.min(size, bytes.byteLength - dataOffset);
+        break;
+      }
+      offset += 8 + size + (size & 1);
+    }
+
+    const sampleCount = Math.floor(dataLength / 2);
+    if (sampleCount <= 0) return null;
+    const samples = new Float32Array(sampleCount);
+    for (let index = 0; index < sampleCount; index += 1) {
+      samples[index] = view.getInt16(dataOffset + index * 2, true) / 32768;
+    }
+    return { samples, sampleRate };
+  } catch (error) {
+    console.warn("[muyu] Failed to decode embedded knock WAV", error);
+    return null;
   }
-  return { samples, sampleRate };
 }
 
 export function createAudio(
@@ -81,8 +76,6 @@ export function createAudio(
   let disposed = false;
 
   let pcmData: PcmData | null = null;
-  let loadingPcm: Promise<void> | null = null;
-
   let audioContext: AudioContext | null = null;
   let gainNode: GainNode | null = null;
   let audioBuffer: AudioBuffer | null = null;
@@ -100,6 +93,9 @@ export function createAudio(
 
   function ensureContext(): AudioContext | null {
     if (!AudioContextCtor || disposed) return null;
+    if (!pcmData) {
+      pcmData = decodeEmbeddedWavPcm();
+    }
     if (!audioContext) {
       try {
         audioContext = new AudioContextCtor();
@@ -141,34 +137,10 @@ export function createAudio(
     }
   }
 
-  function warmup(): Promise<void> {
-    if (loadingPcm) return loadingPcm;
-    loadingPcm = (async () => {
-      try {
-        let bytes: Uint8Array | null = null;
-        if (!sdk && import.meta.env.DEV) {
-          const response = await fetch("media/knock.wav");
-          if (response.ok) {
-            bytes = new Uint8Array(await response.arrayBuffer());
-          }
-        } else if (sdk) {
-          await sdk.ready;
-          try {
-            bytes = toUint8Array(await sdk.assets.readBytes("data/knock.wav"));
-          } catch {
-            bytes = toUint8Array(await sdk.assets.readBytes("media/knock.wav"));
-          }
-        }
-        if (disposed || !bytes) return;
-        pcmData = parseWavPcm16Mono(bytes);
-        if (audioContext && pcmData && !audioBuffer) {
-          ensureContext();
-        }
-      } catch (error) {
-        console.warn("[muyu] Failed to preload knock PCM data", error);
-      }
-    })();
-    return loadingPcm;
+  async function warmup(): Promise<void> {
+    if (!pcmData) {
+      pcmData = decodeEmbeddedWavPcm();
+    }
   }
 
   function unlock() {
@@ -182,7 +154,6 @@ export function createAudio(
         .then(() => {
           if (queuedPlay && !disposed && callbacks.enabled()) {
             queuedPlay = false;
-            ensureContext();
             triggerSource(ctx);
           }
         })
@@ -204,9 +175,6 @@ export function createAudio(
       return;
     }
 
-    if (!pcmData) {
-      await warmup();
-    }
     const ctx = ensureContext();
     if (!ctx || !audioBuffer) {
       unavailable();
@@ -214,8 +182,6 @@ export function createAudio(
     }
 
     if (ctx.state === "suspended") {
-      // On touch devices, pointerdown fires before Chromium grants UserActivation
-      // on pointerup/click. Queue the knock and also try resuming immediately.
       queuedPlay = true;
       try {
         await ctx.resume();
