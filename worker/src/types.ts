@@ -42,6 +42,7 @@ export interface Env {
   CHANNEL: Channel;
   PLATFORM_ISSUER: string;
   PLATFORM_JWKS_URL: string;
+  PLATFORM_JWKS_JSON?: string;
   PLATFORM_AUDIENCE: string;
   PLATFORM_APP_ID: string;
   APP_VERSION?: string;

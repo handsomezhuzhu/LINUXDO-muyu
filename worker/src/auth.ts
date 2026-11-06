@@ -8,6 +8,7 @@ const MAX_JWKS_BYTES = 256 * 1024;
 interface AuthConfig {
   PLATFORM_ISSUER: string;
   PLATFORM_JWKS_URL: string;
+  PLATFORM_JWKS_JSON?: string;
   PLATFORM_AUDIENCE: string;
   PLATFORM_APP_ID: string;
   APP_VERSION?: string;
@@ -184,19 +185,7 @@ async function importPublicJwk(value: unknown): Promise<{ kid: string; key: Cryp
   }
 }
 
-async function fetchJwks(jwksUrl: string): Promise<Map<string, CryptoKey>> {
-  const parsed = new URL(jwksUrl);
-  if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.port || parsed.hash) {
-    invalid();
-  }
-  const response = await fetch(jwksUrl, {
-    method: "GET",
-    headers: { Accept: "application/json" },
-    cache: "no-store",
-    redirect: "error",
-  });
-  if (!response.ok) invalid();
-  const text = await response.text();
+async function parseJwksText(text: string): Promise<Map<string, CryptoKey>> {
   if (textEncoder.encode(text).length > MAX_JWKS_BYTES) invalid();
   const document: unknown = JSON.parse(text);
   if (!isRecord(document) || !Array.isArray(document.keys) || document.keys.length > MAX_JWKS_KEYS) {
@@ -212,11 +201,33 @@ async function fetchJwks(jwksUrl: string): Promise<Map<string, CryptoKey>> {
   return keys;
 }
 
-async function refreshJwks(cache: JwksCacheEntry, jwksUrl: string): Promise<void> {
+async function fetchJwks(jwksUrl: string, fallbackJwksJson?: string): Promise<Map<string, CryptoKey>> {
+  const parsed = new URL(jwksUrl);
+  if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.port || parsed.hash) {
+    invalid();
+  }
+  try {
+    const response = await fetch(jwksUrl, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      redirect: "manual",
+    });
+    if (response.status !== 200) invalid();
+    const text = await response.text();
+    return await parseJwksText(text);
+  } catch (error) {
+    if (typeof fallbackJwksJson === "string" && fallbackJwksJson.trim().length > 0) {
+      return await parseJwksText(fallbackJwksJson);
+    }
+    throw error;
+  }
+}
+
+async function refreshJwks(cache: JwksCacheEntry, config: AuthConfig): Promise<void> {
   if (cache.refreshing) return cache.refreshing;
   cache.refreshCooldownUntil = Date.now() + UNKNOWN_KID_REFRESH_COOLDOWN_MS;
   cache.refreshing = (async () => {
-    const keys = await fetchJwks(jwksUrl);
+    const keys = await fetchJwks(config.PLATFORM_JWKS_URL, config.PLATFORM_JWKS_JSON);
     cache.keys = keys;
     cache.expiresAt = Date.now() + JWKS_TTL_MS;
   })().finally(() => {
@@ -226,7 +237,7 @@ async function refreshJwks(cache: JwksCacheEntry, jwksUrl: string): Promise<void
 }
 
 function getCache(config: AuthConfig): JwksCacheEntry {
-  const cacheKey = `${config.PLATFORM_ISSUER}\n${config.PLATFORM_JWKS_URL}`;
+  const cacheKey = `${config.PLATFORM_ISSUER}\n${config.PLATFORM_JWKS_URL}\n${config.PLATFORM_JWKS_JSON ?? ""}`;
   let cache = jwksCaches.get(cacheKey);
   if (!cache) {
     cache = { keys: new Map(), expiresAt: 0, refreshCooldownUntil: 0, refreshing: null };
@@ -247,7 +258,7 @@ async function verificationKey(kid: string, config: AuthConfig): Promise<CryptoK
   if (cache.refreshing) {
     await cache.refreshing;
   } else if (now >= cache.refreshCooldownUntil) {
-    await refreshJwks(cache, config.PLATFORM_JWKS_URL);
+    await refreshJwks(cache, config);
   }
   key = cache.keys.get(kid);
   if (!key) invalid();
@@ -375,6 +386,7 @@ export function authenticateRequest(
     url: externallyVisibleRequestUrl(request, env.PLATFORM_AUDIENCE),
     PLATFORM_ISSUER: env.PLATFORM_ISSUER,
     PLATFORM_JWKS_URL: env.PLATFORM_JWKS_URL,
+    ...(env.PLATFORM_JWKS_JSON !== undefined ? { PLATFORM_JWKS_JSON: env.PLATFORM_JWKS_JSON } : {}),
     PLATFORM_AUDIENCE: env.PLATFORM_AUDIENCE,
     PLATFORM_APP_ID: env.PLATFORM_APP_ID,
     CHANNEL: env.CHANNEL,
