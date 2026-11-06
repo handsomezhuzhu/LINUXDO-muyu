@@ -130,10 +130,18 @@
   </details>
 </dialog>
 
-<dialog class="dialog dialog--confirm" id="wish-complete-dialog" aria-labelledby="wish-complete-title">
-  <span class="confirm-mark" aria-hidden="true">○</span>
+<dialog class="dialog dialog--confirm" id="wish-complete-dialog" data-sealing="true" tabindex="-1" aria-labelledby="wish-complete-title">
+  <div class="confirm-mark" aria-hidden="true">
+    <span class="confirm-mark__halo"></span>
+    <span class="confirm-mark__ring"></span>
+    <span class="confirm-mark__symbol">○</span>
+  </div>
   <h2 id="wish-complete-title" data-text="wishComplete">祈福圆满</h2>
   <p class="complete-wish-text" id="complete-wish-text"></p>
   <p data-text="wishCompleteHint">这一份心愿已经完成，愿所求皆如愿。</p>
-  <button class="text-button text-button--strong" id="wish-complete-close" type="button" data-text="wishContinue">继续</button>
+  <div class="wish-seal" id="wish-seal" aria-live="polite">
+    <div class="wish-seal__bar" aria-hidden="true"><span id="wish-seal-progress"></span></div>
+    <p class="wish-seal__text" id="wish-seal-text" data-text="wishSealing">余音凝定，正将此愿封存云端…</p>
+  </div>
+  <button class="text-button text-button--strong" id="wish-complete-close" type="button" data-text="wishContinue" disabled>继续</button>
 </dialog>

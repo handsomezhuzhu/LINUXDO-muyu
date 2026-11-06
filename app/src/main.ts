@@ -70,6 +70,9 @@ type Elements = {
   "wish-history": HTMLUListElement;
   "wish-complete-dialog": HTMLDialogElement;
   "complete-wish-text": HTMLElement;
+  "wish-seal": HTMLElement;
+  "wish-seal-progress": HTMLElement;
+  "wish-seal-text": HTMLElement;
   "wish-complete-close": HTMLButtonElement;
 };
 
@@ -104,6 +107,8 @@ let syncing = false;
 let wishBusy = false;
 let fullscreenActive = false;
 let noticeTimer: ReturnType<typeof setTimeout> | null = null;
+let completionTimer: ReturnType<typeof setTimeout> | null = null;
+let completionLocked = false;
 let fishAnimation: Animation | null = null;
 let fishUrl: string | null = null;
 let connecting: Promise<void> | null = null;
@@ -319,12 +324,42 @@ function animateHit() {
 function showWishCompletion(wish: Wish) {
   if (completionShown.has(wish.id)) return;
   completionShown.add(wish.id);
+  const dialog = element("wish-complete-dialog");
+  const sealText = element("wish-seal-text");
+  const closeButton = element("wish-complete-close");
+  const progressBar = element("wish-seal-progress");
+  if (completionTimer !== null) clearTimeout(completionTimer);
+  completionLocked = true;
+  dialog.dataset.sealing = "true";
+  sealText.dataset.text = "wishSealing";
+  sealText.textContent = t("wishSealing");
+  closeButton.disabled = true;
   element("complete-wish-text").textContent = wish.content;
-  if (!element("wish-complete-dialog").open) element("wish-complete-dialog").showModal();
+  progressBar.style.animation = "none";
+  void progressBar.offsetWidth;
+  progressBar.style.animation = "";
+  if (!dialog.open) dialog.showModal();
+  dialog.focus();
+  void flushCloud();
+  completionTimer = setTimeout(() => {
+    completionTimer = null;
+    completionLocked = false;
+    dialog.dataset.sealing = "false";
+    sealText.dataset.text = "wishSealed";
+    sealText.textContent = t("wishSealed");
+    closeButton.disabled = false;
+  }, 3000);
 }
 
 function hit() {
-  if (!initialized) return;
+  if (
+    !initialized ||
+    element("wish-complete-dialog").open ||
+    element("wish-dialog").open ||
+    element("settings-dialog").open
+  ) {
+    return;
+  }
   const result = cloud.recordHit();
   syncFromCloud();
   render();
@@ -533,6 +568,7 @@ element("settings-open").addEventListener("click", () => element("settings-dialo
 element("settings-close").addEventListener("click", () => element("settings-dialog").close());
 for (const id of ["settings-dialog", "wish-dialog", "wish-complete-dialog"] as const) {
   element(id).addEventListener("click", (event) => {
+    if (id === "wish-complete-dialog" && completionLocked) return;
     const dialog = element(id);
     if (event.target !== dialog || (event.clientX === 0 && event.clientY === 0)) return;
     const rect = dialog.getBoundingClientRect();
@@ -546,6 +582,9 @@ for (const id of ["settings-dialog", "wish-dialog", "wish-complete-dialog"] as c
     }
   });
 }
+element("wish-complete-dialog").addEventListener("cancel", (event) => {
+  if (completionLocked) event.preventDefault();
+});
 element("gate-retry").addEventListener("click", () => void connectCloud());
 element("wish-open").addEventListener("click", openWishDialog);
 element("wish-current").addEventListener("click", openWishDialog);
@@ -554,7 +593,10 @@ element("wish-input").addEventListener("input", updateWishInput);
 element("wish-target").addEventListener("change", updateWishInput);
 element("wish-create").addEventListener("click", (event) => void createWish(event));
 element("wish-form").addEventListener("submit", (event) => void createWish(event));
-element("wish-complete-close").addEventListener("click", () => element("wish-complete-dialog").close());
+element("wish-complete-close").addEventListener("click", () => {
+  if (completionLocked) return;
+  element("wish-complete-dialog").close();
+});
 
 async function refreshCloud() {
   if (!initialized || syncing) return;
