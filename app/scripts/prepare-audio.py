@@ -6,6 +6,7 @@ import wave
 PROJECT = Path(__file__).resolve().parents[1]
 SOURCE = PROJECT / "third_party" / "mokugyo" / "607215__jonopodmore__mokugyo.flac"
 OUTPUT = PROJECT / "public" / "media" / "knock.wav"
+ASSET_COPY = PROJECT / "public" / "data" / "knock.wav"
 DURATION = 0.42
 
 if not SOURCE.exists():
@@ -28,6 +29,8 @@ with wave.open(str(OUTPUT), "rb") as audio:
     seconds = audio.getnframes() / audio.getframerate()
     if audio.getnchannels() != 1 or not 0.40 <= seconds <= 0.44:
         raise RuntimeError("Unexpected output audio format or duration")
+ASSET_COPY.parent.mkdir(parents=True, exist_ok=True)
+ASSET_COPY.write_bytes(OUTPUT.read_bytes())
 for path in (SOURCE, OUTPUT):
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
     print(f"{path.name}: {path.stat().st_size} bytes, sha256={digest}")

@@ -470,7 +470,11 @@ async function connectCloud() {
     cloud = createCloudController(adapter);
     syncFromCloud();
     render();
-    const [{ status }] = await Promise.all([cloud.initialize(), loadFish()]);
+    const [{ status }] = await Promise.all([
+      cloud.initialize(),
+      loadFish(),
+      audio.warmup(),
+    ]);
     syncFromCloud();
     gateStatus = status;
     initialized = status === "ready";
