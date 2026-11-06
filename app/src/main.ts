@@ -472,8 +472,8 @@ function openWishDialog() {
   if (!element("wish-dialog").open) element("wish-dialog").showModal();
 }
 
-async function createWish(event: SubmitEvent) {
-  event.preventDefault();
+async function createWish(event?: Event) {
+  event?.preventDefault();
   if (wishBusy || !initialized) return;
   const content = element("wish-input").value;
   const target = Number(element("wish-target").value);
@@ -533,7 +533,17 @@ element("settings-open").addEventListener("click", () => element("settings-dialo
 element("settings-close").addEventListener("click", () => element("settings-dialog").close());
 for (const id of ["settings-dialog", "wish-dialog", "wish-complete-dialog"] as const) {
   element(id).addEventListener("click", (event) => {
-    if (event.target === element(id)) element(id).close();
+    const dialog = element(id);
+    if (event.target !== dialog || (event.clientX === 0 && event.clientY === 0)) return;
+    const rect = dialog.getBoundingClientRect();
+    if (
+      event.clientX < rect.left ||
+      event.clientX > rect.right ||
+      event.clientY < rect.top ||
+      event.clientY > rect.bottom
+    ) {
+      dialog.close();
+    }
   });
 }
 element("gate-retry").addEventListener("click", () => void connectCloud());
@@ -542,6 +552,7 @@ element("wish-current").addEventListener("click", openWishDialog);
 element("wish-close").addEventListener("click", () => element("wish-dialog").close());
 element("wish-input").addEventListener("input", updateWishInput);
 element("wish-target").addEventListener("change", updateWishInput);
+element("wish-create").addEventListener("click", (event) => void createWish(event));
 element("wish-form").addEventListener("submit", (event) => void createWish(event));
 element("wish-complete-close").addEventListener("click", () => element("wish-complete-dialog").close());
 
